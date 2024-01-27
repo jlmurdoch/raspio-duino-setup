@@ -12,7 +12,7 @@ raspioduino.bootloader.tool.default=avrdude_linuxgpio
 raspioduino.bootloader.low_fuses=0xE7
 raspioduino.bootloader.high_fuses=0xDA
 raspioduino.bootloader.extended_fuses=0x07
-raspioduino.bootloader.file=atmega/ATmegaBOOT_168_gert328.hex
+raspioduino.bootloader.file=atmega/ATmegaBOOT_168_atmega328.hex
 raspioduino.bootloader.unlock_bits=0x3F
 raspioduino.bootloader.lock_bits=0x0F
 
