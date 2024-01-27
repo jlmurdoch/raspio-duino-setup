@@ -1,32 +1,39 @@
 # RasPiO Duino setup 
 
-This is notes on how to use a RasPiO Duino, an Arduino-compatible HAT for the Raspberry Pi. It runs an ATmega328p microcontroller at 12MHz with 32k memory). It is actually a clone of an Arduino UNO.
+This is personal notes on how to use a RasPiO Duino, an Arduino-compatible HAT for the Raspberry Pi, in 2024. The device is still handy for a few reasons:
+- Benchmark device - it's effectively an Arduino UNO
+- 12 MHz clock
+- No flyleads between the devices
+- One PSU for both devices
+- Easy SPI comms - no bootloader needed
+- Effectively supplies analogue inputs to a Raspberry Pi
 
-See the arduino-ide directory for notes on how to integrate into the Arduino IDE as part of the AVR package, although note that ARM64 packages are non-existant (Jan 2024), the fallback being a 32-bit install, or using Microsoft Visual Studio Code.
+Finally, this guide just uses avrdude, but there are Arduino board.txt, platform.txt and programmer.txt examples supplied [here](./arduino-files).
 
 ## Wiring / Pinouts
-To access the RasPiO Duino for programming, SPI can be used with the linuxgpio programmer of avrdude:
-- RST = GPIO  8, Pin 24, SPI0 CE0
-- SDI = GPIO  9, Pin 21, SPI0 MISO
-- SDO = GPIO 10, Pin 19, SPI0 MOSI
-- SCK = GPIO 11, Pin 23, SPI0 SCLK
-
-Serial access (optional) is as follows:
-- TX = GPIO 14, Pin  8, UART TX
-- RX = GPIO 15, Pin 10, UART RX
+To access the RasPiO Duino, the following pins are used. Four are used for Avrdude linuxspi/linuxgpio programming and a further two can be used for a serial console:
+| linuxgpio | Pi GPIO | Pi Pin | Pi Function |
+|---------|---------|--------|-------------|
+| RST | GPIO  8 | Pin 24 | SPI0 CE0  |
+| SDI | GPIO  9 | Pin 21 | SPI0 MISO |
+| SDO | GPIO 10 | Pin 19 | SPI0 MOSI |
+| SCK | GPIO 11 | Pin 23 | SPI0 SCLK |
+|  | GPIO 14 | Pin  8 | UART TX   |
+|  | GPIO 15 | Pin 10 | UART RX   |
 
 There is an LED on PB5 (5th bit when programming) that can be used for testing, which the blink-test program demonstrates.
 
 ## Installation
-All you need is avrdude (for uploading) and the compiler suite:
+All that is needed is avrdude (for uploading) and the GCC AVR compiler suite:
 ```
 sudo apt install avrdude gcc-avr
 ```
 
 ## Initial Testing For Connectivity
-Run this to poll the device using the linuxgpio programmer:
+Run this to poll the device using the linuxgpio programmer, using the `avrdude-linuxgpio.conf`:
 ```
-vrdude: Version 7.1
+avrdude -p atmega328p -c linuxgpio -C +avrdude-linuxgpio.conf -v
+avrdude: Version 7.1
          Copyright the AVRDUDE authors;
          see https://github.com/avrdudes/avrdude/blob/main/AUTHORS
 
@@ -86,15 +93,16 @@ echo 8 > /sys/class/gpio/unexport
 ```
 
 ## Compiling An Example Program
-If a test program is needed or you wish to avoid using the Arduino IDE, this is a compilation example, building the binary and hex output:
+If a test program is needed or one wishes to avoid using the Arduino IDE, in the blink-test directory is a compilation example that blinks the PB5 LED. 
+
+Building the binary and hex output is as follows:
 ```
+cd blink-test/
 avr-gcc -Os -mmcu=atmega328p -c blink-test.c
 avr-gcc -mmcu=atmega328p -o blink-test.elf blink-test.o 
 avr-objcopy -O ihex blink-test.elf blink-test.hex
 rm blink-test.o blink-test.elf
 ```
-
-This code simply blinks the LED. A precompiled version is in the repository.
 
 ## Uploading To The Chip
 To upload a hex file:
@@ -102,12 +110,22 @@ To upload a hex file:
 avrdude -p atmega328p -c linuxgpio -C +avrdude-linuxgpio.conf -U flash:w:blink-test/blink-test.hex
 ```
 
+# Serial testing
+If running on a Raspberry Pi, serial should be enabled, but **NOT** as a server, as the Pi will be a client.
+
+Packages that can be used for serial comms:
+- **GNU screen** - ability to detach / reattach
+  - `screen /dev/ttyS0 9600`
+- **minicom** - lots of options
+  - `minicom -D /dev/ttyS0 -b 9600`
+- **cu / opencu (call up)** - lightweight
+  - `cu -s 9600 -l /dev/ttyS0`
+
 # Chip fuse setup
 Some notes on fuses:
 - This only needs to be done on initialisation
 - This was taken from a copy of avrsetup and converted to linuxgpio
 - Extended fuse (efuse) is set as 0x07, but reported as 0xFF as only the first 3 bits can be toggled for brown-out detection
-)
 - High fuse (hfuse) is set to 0xD9 giving the maximum of 2KB for a bootloader. This can be changed to 0xDA (0KB) if no bootloader is required
 - This works for 12 MHz external crystal clock speed
 ```
@@ -121,9 +139,9 @@ The following should be suitable (untested!):
 https://github.com/arduino/ArduinoCore-avr/blob/master/bootloaders/atmega/ATmegaBOOT_168_atmega328.hex
 
 # Using a dedicated programmer
-Here is how to play with the ATMEGA328P-PU chip using a TL866xx and the minipro CLI tool.
+Here is how to play with an extracted ATMEGA328P-PU chip using a TL866xx and the minipro CLI tool. Using an ICSP interface with a RasPiO Duino still connected to a Raspberry Pi will probably result in magic smoke / dead electronics.  
 
-List for a supported chip:
+Search for supported chip(s):
 ```
 $ minipro -L atmega328
 Found TL866CS 03.2.86 (0x256)
@@ -153,4 +171,3 @@ Reading Code...  0.88Sec  OK
 Reading Data...  0.04Sec  OK
 Reading config... 0.00Sec  OK
 ```
-
