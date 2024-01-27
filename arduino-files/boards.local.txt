@@ -1,0 +1,23 @@
+raspioduino.name=RasPiO Duino with ATmega328 @ 12MHz
+
+raspioduino.upload.tool=avrdude_linuxgpio
+raspioduino.upload.tool.default=avrdude_linuxgpio
+raspioduino.upload.protocol=linuxgpio
+raspioduino.upload.maximum_size=32768
+raspioduino.upload.speed=57600
+raspioduino.upload.disable_flushing=true
+
+raspioduino.bootloader.tool=avrdude_linuxgpio
+raspioduino.bootloader.tool.default=avrdude_linuxgpio
+raspioduino.bootloader.low_fuses=0xE7
+raspioduino.bootloader.high_fuses=0xDA
+raspioduino.bootloader.extended_fuses=0x07
+raspioduino.bootloader.file=atmega/ATmegaBOOT_168_gert328.hex
+raspioduino.bootloader.unlock_bits=0x3F
+raspioduino.bootloader.lock_bits=0x0F
+
+raspioduino.build.mcu=atmega328p
+raspioduino.build.f_cpu=12000000L
+raspioduino.build.board=RASPIO_DUINO
+raspioduino.build.core=arduino
+raspioduino.build.variant=standard
