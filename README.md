@@ -1,17 +1,20 @@
 # RasPiO Duino setup 
 
-This is personal notes on how to use a RasPiO Duino, an Arduino-compatible HAT for the Raspberry Pi, in 2024. The device is still handy for a few reasons:
-- Benchmark device - it's effectively an Arduino UNO
-- 12 MHz clock
+This is personal notes on how to get a [RasPiO Duino](https://rasp.io/duino/) that was released in 2015 up-and-running in 2024 with latest linux, avrdude+linuxgpio, etc.
+
+The device is still handy for a few reasons:
+- It plugs on top of the Raspberry Pi's GPIO (using only 26-pins)
+- It logically works like an Arduino UNO
+- External clock at 12MHz/3.3V (noting the UNO runs at 16MHz/5V)
 - No flyleads between the devices
 - One PSU for both devices
 - Easy SPI comms - no bootloader needed
 - Effectively supplies analogue inputs to a Raspberry Pi
 
-Finally, this guide just uses avrdude, but there are Arduino board.txt, platform.txt and programmer.txt examples supplied [here](./arduino-files).
+Finally, this guide just uses avrdude, but there are Arduino IDE/CLI files board.txt, platform.txt and programmer.txt examples supplied [here](./arduino-files).
 
 ## Wiring / Pinouts
-To access the RasPiO Duino, the following pins are used. Four are used for Avrdude linuxspi/linuxgpio programming and a further two can be used for a serial console:
+To access the RasPiO Duino, the following pins are used. Four are used for Avrdude linuxgpio programming and a further two can be used for a serial console:
 | linuxgpio | Pi GPIO | Pi Pin | Pi Function |
 |---------|---------|--------|-------------|
 | RST | GPIO  8 | Pin 24 | SPI0 CE0  |
@@ -20,6 +23,8 @@ To access the RasPiO Duino, the following pins are used. Four are used for Avrdu
 | SCK | GPIO 11 | Pin 23 | SPI0 SCLK |
 |  | GPIO 14 | Pin  8 | UART TX   |
 |  | GPIO 15 | Pin 10 | UART RX   |
+
+The linuxspi programmer doesn't work out-of-the-box. GPIO 8/SPI CE0 is hard wired to the RESET pin on the ATMega328P-PU and avrdude expects to use GPIO, which is then locked out by the spidev module / cited as being too slow for avrdude. The linuxgpio programmer should be used instead.
 
 There is an LED on PB5 (5th bit when programming) that can be used for testing, which the blink-test program demonstrates.
 
